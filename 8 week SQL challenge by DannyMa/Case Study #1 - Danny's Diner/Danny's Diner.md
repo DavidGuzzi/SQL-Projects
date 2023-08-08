@@ -140,6 +140,32 @@ B | sushy | 2
 C | ramen | 3
 
 *6) Which item was purchased first by the customer after they became a member?*
+##### Solution.
+```sql
+WITH rank AS (
+  SELECT 
+    s.customer_id,
+    n.product_name,
+    (s.order_date - m.join_date) AS dif,
+    DENSE_RANK() OVER(
+      PARTITION BY s.customer_id 
+      ORDER BY (s.order_date - m.join_date)) AS rank
+  FROM dannys_diner.sales AS s
+  INNER JOIN dannys_diner.menu AS n ON n.product_id = s.product_id
+  INNER JOIN dannys_diner.members AS m ON m.customer_id = s.customer_id  
+  WHERE (s.order_date - m.join_date) > 0)
+  
+SELECT 
+   customer_id,
+   product_name
+FROM rank
+WHERE rank = 1;
+```
+##### Output.
+customer_id | product_name
+--| -- 
+A | ramen
+B | suchi
 
 *7) Which item was purchased just before the customer became a member?*
 
