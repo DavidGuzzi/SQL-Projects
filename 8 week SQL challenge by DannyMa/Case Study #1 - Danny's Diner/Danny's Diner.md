@@ -40,16 +40,23 @@ C | 2
 *3) What was the first item from the menu purchased by each customer?*
 ##### Solution.
 ```sql
+WITH rank AS (
+  SELECT 
+    s.customer_id, 
+    s.order_date, 
+    m.product_name,
+    DENSE_RANK() OVER(
+      PARTITION BY s.customer_id 
+      ORDER BY s.order_date) AS rank
+  FROM dannys_diner.sales AS s
+  INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id)
+
 SELECT 
-      s.customer_id,
-      m.product_name AS first_purchased
-FROM dannys_diner.sales AS s  
-INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
-WHERE s.order_date IN  (
-  SELECT MIN(order_date)
-  FROM dannys_diner.sales)
-GROUP BY  s.customer_id, m.product_name
-ORDER BY s.customer_id;
+    r.customer_id,
+    r.product_name AS first_purchased
+FROM rank AS r
+WHERE r.rank = 1
+GROUP BY r.customer_id, r.product_name;
 ```
 ##### Output.
 customer_id | first_purchased
@@ -59,9 +66,46 @@ A | sushi
 B | curry
 C | ramen
 
-
-
 *4) What is the most purchased item on the menu and how many times was it purchased by all customers?*
+##### Solution.
+##### Most purchased item:
+```sql
+SELECT 
+    m.product_name AS most_purchased, 
+    COUNT(m.product_name) AS total_purchased
+FROM dannys_diner.menu AS m
+INNER JOIN dannys_diner.sales AS s ON s.product_id = m.product_id
+GROUP BY m.product_name
+ORDER BY COUNT(m.product_name) DESC
+LIMIT 1;
+```
+##### Output.
+most_purchased | total_purchased
+--| --
+ramen | 8
+##### Most purchased item for each customer:
+```sql
+SELECT 
+    m.product_name AS most_purchased,
+    s.customer_id,
+    COUNT(m.product_name) AS number_purchased
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
+WHERE s.product_id IN (
+  SELECT product_id
+  FROM dannys_diner.sales
+  GROUP BY product_id
+  ORDER BY COUNT(product_id) DESC
+  LIMIT 1)
+GROUP BY m.product_name, s.customer_id
+ORDER BY number_purchased DESC;
+```
+##### Output.
+most_purchased | customer_id | number_purchased
+--| -- | --
+ramen | C | 3 
+ramen | A | 3
+ramen | B | 2
 
 *5) Which item was the most popular for each customer?*
 
