@@ -108,14 +108,36 @@ ramen | A | 3
 ramen | B | 2
 
 *5) Which item was the most popular for each customer?*
+##### Solution.
+```sql
+WITH rank AS (
+  SELECT 
+    s.customer_id, 
+    m.product_name AS popular_item, 
+    COUNT(m.product_name),
+    DENSE_RANK() OVER(
+      PARTITION BY s.customer_id 
+      ORDER BY COUNT(s.customer_id) DESC) AS rank
+  FROM dannys_diner.menu AS m
+  INNER JOIN dannys_diner.sales AS s ON m.product_id = s.product_id
+  GROUP BY s.customer_id, m.product_name
+)
+
 SELECT 
-    s.customer_id,
-    m.product_name,
-    COUNT(m.product_name)
-FROM dannys_diner.sales AS s
-INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
-GROUP BY s.customer_id, m.product_name
-ORDER BY COUNT(m.product_name) DESC;
+  customer_id, 
+  popular_item, 
+  count
+FROM rank 
+WHERE rank = 1;
+```
+##### Output.
+customer_id | popular_item | count
+--| -- | --
+A | ramen | 3
+B | ramen | 2
+B | curry | 2
+B | sushy | 2
+C | ramen | 3
 
 *6) Which item was purchased first by the customer after they became a member?*
 
