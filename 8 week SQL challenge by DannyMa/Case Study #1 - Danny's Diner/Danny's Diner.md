@@ -108,6 +108,14 @@ ramen | A | 3
 ramen | B | 2
 
 *5) Which item was the most popular for each customer?*
+SELECT 
+    s.customer_id,
+    m.product_name,
+    COUNT(m.product_name)
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.menu AS m ON s.product_id = m.product_id
+GROUP BY s.customer_id, m.product_name
+ORDER BY COUNT(m.product_name) DESC;
 
 *6) Which item was purchased first by the customer after they became a member?*
 
