@@ -143,18 +143,20 @@ C | ramen | 3
 ##### Solution.
 ```sql
 WITH rank AS (
-  SELECT 
-    s.customer_id,
+  SELECT
+  	s.customer_id,
+    s.order_date,
+    m.join_date,
     n.product_name,
-    (s.order_date - m.join_date) AS dif,
     DENSE_RANK() OVER(
-      PARTITION BY s.customer_id 
-      ORDER BY (s.order_date - m.join_date)) AS rank
-  FROM dannys_diner.sales AS s
-  INNER JOIN dannys_diner.menu AS n ON n.product_id = s.product_id
-  INNER JOIN dannys_diner.members AS m ON m.customer_id = s.customer_id  
-  WHERE (s.order_date - m.join_date) > 0)
-  
+      PARTITION BY s.customer_id
+      ORDER BY s.order_date) AS rank
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id AND s.order_date > m.join_date
+INNER JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id)
+
 SELECT 
    customer_id,
    product_name
@@ -165,12 +167,175 @@ WHERE rank = 1;
 customer_id | product_name
 --| -- 
 A | ramen
-B | suchi
+B | sushi
 
 *7) Which item was purchased just before the customer became a member?*
+##### Solution.
+```sql
+WITH rank AS (
+  SELECT
+  	s.customer_id,
+    s.order_date,
+    m.join_date,
+    n.product_name,
+    DENSE_RANK() OVER(
+      PARTITION BY s.customer_id
+      ORDER BY s.order_date) AS rank
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id AND s.order_date < m.join_date
+INNER JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id)
+
+SELECT 
+   customer_id,
+   product_name
+FROM rank
+WHERE rank = 1;
+```
+##### Output.
+customer_id | product_name
+--| -- 
+A | sushi
+A | curry
+B | sushi
+
 
 *8) What is the total items and amount spent for each member before they became a member?*
+```sql
+SELECT
+  	s.customer_id,
+    COUNT(n.product_name) AS total_items,
+    SUM(n.price) AS total_amount
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id AND s.order_date < m.join_date
+INNER JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id
+GROUP BY s.customer_id;
+```
+##### Output.
+customer_id | total_items | total_amount
+--| -- | --
+B | 3 | 40
+A | 2 | 25
 
 *9)  If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?*
+```sql
+WITH points AS (
+  SELECT
+  	s.customer_id,
+    n.product_name,
+    CASE n.product_name 
+    WHEN 'sushi' THEN n.price * 20
+    ELSE n.price * 10 
+    END points
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id)
+
+SELECT 
+   customer_id,
+   SUM(points) AS total_points
+FROM points
+GROUP BY customer_id
+ORDER BY total_points DESC;
+```
+##### Output.
+customer_id | total_points
+--| -- 
+B | 940
+A | 860
+C | 360
+
 
 *10) In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?*
+
+
+### <p align="center" style="margin-top: 0px;">  Bonus questions - Recreate tables
+
+#### Bonus 1.
+#### Output.
+| customer_id | order_date | product_name | price | member |
+| ----------- | ---------- | ------------ | ----- | ------ |
+| A           | 2021-01-01 | sushi        | 10    | N      |
+| A           | 2021-01-01 | curry        | 15    | N      |
+| A           | 2021-01-07 | curry        | 15    | Y      |
+| A           | 2021-01-10 | ramen        | 12    | Y      |
+| A           | 2021-01-11 | ramen        | 12    | Y      |
+| A           | 2021-01-11 | ramen        | 12    | Y      |
+| B           | 2021-01-01 | curry        | 15    | N      |
+| B           | 2021-01-02 | curry        | 15    | N      |
+| B           | 2021-01-04 | sushi        | 10    | N      |
+| B           | 2021-01-11 | sushi        | 10    | Y      |
+| B           | 2021-01-16 | ramen        | 12    | Y      |
+| B           | 2021-02-01 | ramen        | 12    | Y      |
+| C           | 2021-01-01 | ramen        | 12    | N      |
+| C           | 2021-01-01 | ramen        | 12    | N      |
+| C           | 2021-01-07 | ramen        | 12    | N      |
+
+#### Solution.
+```sql
+SELECT
+  	s.customer_id,
+    s.order_date,
+    n.product_name,
+    n.price,
+    CASE WHEN s.order_date >= m.join_date THEN 'Y'
+    WHEN s.order_date < m.join_date THEN 'N'
+    WHEN m.join_date IS NULL THEN 'N'
+    END member
+FROM dannys_diner.sales AS s
+LEFT JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id
+LEFT JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id
+ORDER BY s.customer_id, s.order_date;
+```
+
+#### Bonus 2.
+#### Output.
+| customer_id | order_date | product_name | price | member | ranking |
+| ----------- | -----------| ------------ | ----- | ------ | ------- |
+| A           | 2021-01-01 | sushi        | 10    | N      |         |
+| A           | 2021-01-01 | curry        | 15    | N      |         |
+| A           | 2021-01-07 | curry        | 15    | Y      | 2       |
+| A           | 2021-01-10 | ramen        | 12    | Y      | 3       |
+| A           | 2021-01-11 | ramen        | 12    | Y      | 4       |
+| A           | 2021-01-11 | ramen        | 12    | Y      | 4       |
+| B           | 2021-01-01 | curry        | 15    | N      |         |
+| B           | 2021-01-02 | curry        | 15    | N      |         |
+| B           | 2021-01-04 | sushi        | 10    | N      |         |
+| B           | 2021-01-11 | sushi        | 10    | Y      | 4       |
+| B           | 2021-01-16 | ramen        | 12    | Y      | 5       |
+| B           | 2021-02-01 | ramen        | 12    | Y      | 6       |
+| C           | 2021-01-01 | ramen        | 12    | N      |         |
+| C           | 2021-01-01 | ramen        | 12    | N      |         |
+| C           | 2021-01-07 | ramen        | 12    | N      |         |
+
+#### Solution.
+```sql
+WITH tabla AS (
+  SELECT
+  	s.customer_id,
+    s.order_date,
+    n.product_name,
+    n.price,
+    CASE WHEN s.order_date >= m.join_date THEN 'Y'
+    WHEN s.order_date < m.join_date THEN 'N'
+    WHEN m.join_date IS NULL THEN 'N'
+    END member
+FROM dannys_diner.sales AS s
+LEFT JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id
+LEFT JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id
+ORDER BY s.customer_id, s.order_date)
+
+SELECT
+    *,
+    CASE 
+    WHEN member = 'Y' THEN (DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date))
+    ELSE NULL END ranking
+ FROM tabla;
+```
