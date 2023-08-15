@@ -250,7 +250,36 @@ C | 360
 
 
 *10) In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?*
+```sql
+WITH pi AS (
+  SELECT
+  	s.customer_id,
+    n.product_name,
+    n.price,
+    s.order_date,
+    m.join_date,
+    m.join_date + 6 AS final_date
+FROM dannys_diner.sales AS s
+INNER JOIN dannys_diner.members AS m 
+ON s.customer_id = m.customer_id
+INNER JOIN dannys_diner.menu AS n
+ON s.product_id = n.product_id
+WHERE s.order_date <= '2021-01-31'
+ORDER BY s.customer_id)
 
+SELECT
+    customer_id,
+    SUM(CASE WHEN product_name = 'sushi' THEN price * 20
+    WHEN order_date BETWEEN join_date AND final_date THEN price * 20
+    ELSE price * 10 END) total_points
+FROM pi
+GROUP BY customer_id;
+```
+##### Output.
+customer_id | total_points
+--| -- 
+A | 1370
+B | 820
 
 ### <p align="center" style="margin-top: 0px;">  Bonus questions - Recreate tables
 
