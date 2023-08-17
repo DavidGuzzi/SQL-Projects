@@ -174,7 +174,7 @@ WHERE status = 'Both';
 *9) What was the total volume of pizzas ordered for each hour of the day?*
 ```sql
 SELECT
-   	EXTRACT(hour FROM order_time) AS day_hour,
+    EXTRACT(hour FROM order_time) AS day_hour,
     COUNT(*) AS total_ordered
 FROM pizza_runner.customer_orders
 GROUP BY EXTRACT(hour FROM order_time)
@@ -192,4 +192,18 @@ ORDER BY EXTRACT(hour FROM order_time);
 
 
 *10) What was the volume of orders for each day of the week?*
-
+```sql
+SELECT
+    TO_CHAR(order_time, 'day') AS day_week,
+    COUNT(*) AS total_ordered
+FROM pizza_runner.customer_orders
+GROUP BY TO_CHAR(order_time, 'day')
+ORDER BY total_ordered DESC;
+```
+##### Output.
+| day_week  | total_ordered |
+| --------- | ------------- |
+| wednesday | 5             |
+| saturday  | 5             |
+| thursday  | 3             |
+| friday    | 1             |
