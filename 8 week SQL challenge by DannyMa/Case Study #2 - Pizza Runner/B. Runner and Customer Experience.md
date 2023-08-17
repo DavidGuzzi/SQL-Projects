@@ -2,9 +2,26 @@
 
 #### Case Study Questions:
 
-*1) How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)*
+*1) How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01).*
+##### Solution.
+```sql
+SELECT
+   TO_CHAR(registration_date, 'w') AS week_number,
+   COUNT(*) AS total_runners
+FROM pizza_runner.runners
+GROUP BY TO_CHAR(registration_date, 'w')
+ORDER BY TO_CHAR(registration_date, 'w');
+```
+##### Output.
+| week_number | total_runners |
+| ----------- | ------------- |
+| 1           | 2             |
+| 2           | 1             |
+| 3           | 1             |
+
 
 *2) What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?*
+
 
 *3) Is there any relationship between the number of pizzas and how long the order takes to prepare?*
 
