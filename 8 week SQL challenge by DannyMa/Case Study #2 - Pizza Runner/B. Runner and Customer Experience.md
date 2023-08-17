@@ -21,9 +21,53 @@ ORDER BY TO_CHAR(registration_date, 'w');
 
 
 *2) What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?*
+```sql
+SELECT 
+   r.runner_id,
+   AVG(EXTRACT(min FROM (r.pickup_time::timestamp - c.order_time)))::int AS avg_min 
+FROM pizza_runner.customer_orders AS c
+INNER JOIN pizza_runner.runner_orders AS r
+ ON c.order_id = r.order_id
+WHERE r.pickup_time IS NOT NULL
+GROUP BY r.runner_id
+ORDER BY r.runner_id;
+```
+##### Output.
+| runner_id | avg_min |
+| --------- | ------- |
+| 1         | 15      |
+| 2         | 23      |
+| 3         | 10      |
 
 
 *3) Is there any relationship between the number of pizzas and how long the order takes to prepare?*
+```sql
+WITH s AS (
+  SELECT 
+   c.order_id,
+   COUNT(c.order_id) AS num_pizzas,
+   AVG(EXTRACT(min FROM (r.pickup_time::timestamp - c.order_time)))::int AS avg_min 
+FROM pizza_runner.customer_orders AS c
+INNER JOIN pizza_runner.runner_orders AS r
+ ON c.order_id = r.order_id
+WHERE r.pickup_time IS NOT NULL
+GROUP BY c.order_id
+ORDER BY num_pizzas DESC)
+
+SELECT 
+   num_pizzas,
+   AVG(avg_min)::int AS avg_min
+FROM s
+GROUP BY num_pizzas
+ORDER BY num_pizzas;
+```
+##### Output.
+| num_pizzas | avg_min |
+| ---------- | ------- |
+| 1          | 12      |
+| 2          | 18      |
+| 3          | 29      |
+
 
 *4) What was the average distance travelled for each customer?*
 
