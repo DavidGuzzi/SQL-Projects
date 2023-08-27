@@ -70,6 +70,23 @@ ORDER BY num_pizzas;
 
 
 *4) What was the average distance travelled for each customer?*
+```sql
+SELECT 
+   c.customer_id,
+   AVG(r.distance) AS avg_distance 
+FROM pizza_runner.customer_orders AS c
+INNER JOIN pizza_runner.runner_orders AS r
+ ON c.order_id = r.order_id
+WHERE r.distance IS NOT NULL
+GROUP BY c.customer_id
+ORDER BY avg_distance DESC;
+```
+##### Output.
+| num_pizzas | avg_min |
+| ---------- | ------- |
+| 1          | 12      |
+| 2          | 18      |
+| 3          | 29      |
 
 *5) What was the difference between the longest and shortest delivery times for all orders?*
 
