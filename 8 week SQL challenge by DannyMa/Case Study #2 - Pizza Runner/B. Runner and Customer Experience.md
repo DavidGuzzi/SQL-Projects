@@ -73,20 +73,22 @@ ORDER BY num_pizzas;
 ```sql
 SELECT 
    c.customer_id,
-   AVG(r.distance) AS avg_distance 
+   ROUND(AVG(r.distance)) AS avg_distance 
 FROM pizza_runner.customer_orders AS c
 INNER JOIN pizza_runner.runner_orders AS r
  ON c.order_id = r.order_id
 WHERE r.distance IS NOT NULL
 GROUP BY c.customer_id
-ORDER BY avg_distance DESC;
+ORDER BY c.customer_id;
 ```
 ##### Output.
-| num_pizzas | avg_min |
+| customer_id | avg_distance |
 | ---------- | ------- |
-| 1          | 12      |
-| 2          | 18      |
-| 3          | 29      |
+| 101          | 20      |
+| 102          | 17      |
+| 103          | 23      |
+| 104          | 10      |
+| 105          | 25      |
 
 *5) What was the difference between the longest and shortest delivery times for all orders?*
 
