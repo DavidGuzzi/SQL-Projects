@@ -143,4 +143,19 @@ ORDER BY runner_id, order_id;
 | 3         | 5        | 40                 |
 
 *7) What is the successful delivery percentage for each runner?*
-
+```sql
+SELECT
+   runner_id,
+   ROUND(SUM(CASE 
+   WHEN cancellation IS NULL OR pickup_time IS NOT NULL THEN 1
+   ELSE 0 END) / COUNT(order_id)::numeric * 100) AS successful_delivery_percentage
+FROM pizza_runner.runner_orders
+GROUP BY runner_id
+ORDER BY runner_id;
+```
+#### Output.
+| runner_id | successful_delivery_percentage |
+| --------- | ------------------------------ |
+| 1         | 100                            |
+| 2         | 75                             |
+| 3         | 50                             |
