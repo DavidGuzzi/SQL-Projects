@@ -91,7 +91,56 @@ ORDER BY c.customer_id;
 | 105          | 25      |
 
 *5) What was the difference between the longest and shortest delivery times for all orders?*
+```sql
+WITH maxmin AS(
+SELECT 
+   MAX(duration) AS max_duration,
+   MIN(duration) AS min_duration
+FROM pizza_runner.runner_orders
+WHERE duration IS NOT NULL)
+
+SELECT
+   max_duration,
+   min_duration,
+   (max_duration - min_duration) AS difference
+FROM maxmin;
+```
+##### Output.
+| max_duration | min_duration | difference |
+| ---------- | ------- |------- |
+| 40          | 10      | 30    |
 
 *6) What was the average speed for each runner for each delivery and do you notice any trend for these values?*
+```sql
+WITH speed AS(
+SELECT 
+   order_id,
+   runner_id,
+   distance,
+   (duration / 60) AS duration_hrs,
+   (distance / duration * 60) AS speed
+FROM pizza_runner.runner_orders
+WHERE distance IS NOT NULL AND duration IS NOT NULL)
+
+SELECT 
+   runner_id,
+   order_id,
+   AVG(speed) AS avg_speed
+FROM speed
+GROUP BY runner_id, order_id
+ORDER BY runner_id, order_id;
+```
+##### Output.
+| runner_id | order_id | avg_speed          |
+| --------- | -------- | ------------------ |
+| 1         | 1        | 37.5               |
+| 1         | 2        | 44.44444444444444  |
+| 1         | 3        | 40.2               |
+| 1         | 10       | 60                 |
+| 2         | 4        | 35.099999999999994 |
+| 2         | 7        | 60                 |
+| 2         | 8        | 93.6               |
+| 3         | 5        | 40                 |
 
 *7) What is the successful delivery percentage for each runner?*
+
