@@ -24,8 +24,40 @@ GROUP BY pizza_name;
 | Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce            |
 
 *2) What was the most commonly added extra?*
+##### Solution.
+```sql
+SELECT t.topping_id, t.topping_name, COUNT(*) AS extra_count
+FROM pizza_runner.pizza_toppings AS t
+INNER JOIN pizza_runner.customer_orders AS c
+ ON t.topping_id = ANY(string_to_array(c.extras, ', ')::int[])
+ WHERE c.extras IS NOT NULL
+ GROUP BY t.topping_id, t.topping_name
+ ORDER BY extra_count DESC, t.topping_id;
+```
+##### Output.
+| topping_id | topping_name | extra_count |
+| ---------- | ------------ | ----------- |
+| 1          | Bacon        | 4           |
+| 4          | Cheese       | 1           |
+| 5          | Chicken      | 1           |
 
 *3) What was the most common exclusion?*
+##### Solution.
+```sql
+SELECT t.topping_id, t.topping_name, COUNT(*) AS exclusion_count
+FROM pizza_runner.pizza_toppings AS t
+INNER JOIN pizza_runner.customer_orders AS c
+ ON t.topping_id = ANY(string_to_array(c.exclusions, ', ')::int[])
+ WHERE c.exclusions IS NOT NULL
+ GROUP BY t.topping_id, t.topping_name
+ ORDER BY exclusion_count DESC, t.topping_id;
+```
+##### Output.
+| topping_id | topping_name | exclusion_count |
+| ---------- | ------------ | --------------- |
+| 4          | Cheese       | 4               |
+| 2          | BBQ Sauce    | 1               |
+| 6          | Mushrooms    | 1               |
 
 *4) *Generate an order item for each record in the customers_orders table in the format of one of the following:*
         
