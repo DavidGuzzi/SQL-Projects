@@ -3,6 +3,25 @@
 #### Case Study Questions:
 
 *1) What are the standard ingredients for each pizza?*
+##### Solution.
+```sql
+WITH data AS (
+  SELECT pn.pizza_name, t.topping_name
+  FROM pizza_runner.pizza_recipes AS pc
+  INNER JOIN pizza_runner.pizza_names AS pn
+    ON pc.pizza_id = pn.pizza_id
+  INNER JOIN pizza_runner.pizza_toppings AS t
+    ON t.topping_id = ANY(string_to_array(pc.toppings, ', ')::int[]))
+
+SELECT pizza_name, STRING_AGG(topping_name, ', ') AS standard_ingredients
+FROM data
+GROUP BY pizza_name;
+```
+##### Output.
+| pizza_name | standard_ingredients                                                  |
+| ---------- | --------------------------------------------------------------------- |
+| Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami |
+| Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce            |
 
 *2) What was the most commonly added extra?*
 
