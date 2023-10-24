@@ -112,7 +112,6 @@ LIMIT 1;
 
 *7) For each customer, how many delivered pizzas had at least 1 change and how many had no changes?*
 ```sql
-```sql
 WITH d AS(
   SELECT
     c.customer_id,
